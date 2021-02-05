@@ -12,40 +12,48 @@ fn main() -> io::Result<()> {
         Arg::with_name("PORT")
             .help("Sets thes port name")
             .value_name("PORT")
+            .env("PUMP_PORT")
             .required(true),
         Arg::with_name("BAUDRATE")
             .help("Sets the baudrate")
             .value_name("BAUDRATE")
+            .env("PUMP_BAUDRATE")
             .default_value("115200"),
         Arg::with_name("TIMEOUT")
-            .help("Sets the link timeout in milliseconds")
+            .help("Sets the timeout in milliseconds")
             .value_name("TIMEOUT")
             .default_value("0")
-            .long("timeout"),
+            .long("timeout")
+            .short("t"),
         Arg::with_name("FLOW")
             .help("Sets the flow control")
             .value_name("FLOW")
-            .default_value("none")
-            .possible_values(&["none", "soft"])
-            .long("flow"),
+            .env("PUMP_FLOW")
+            .default_value("off")
+            .possible_values(&["off", "soft"])
+            .long("flow")
+            .short("f"),
         Arg::with_name("PARITY")
             .help("Sets the parity")
             .value_name("PARITY")
             .default_value("none")
             .possible_values(&["none", "odd", "even"])
-            .long("parity"),
+            .long("parity")
+            .short("p"),
         Arg::with_name("DATA_BITS")
             .help("Sets the data bits")
             .value_name("DATA_BITS")
             .default_value("8")
             .possible_values(&["5", "6", "7", "8"])
-            .long("data-bits"),
+            .long("data-bits")
+            .short("d"),
         Arg::with_name("STOP_BITS")
             .help("Sets the stop bits")
             .value_name("STOP_BITS")
             .default_value("1")
             .possible_values(&["1", "2"])
-            .long("stop-bits"),
+            .long("stop-bits")
+            .short("s"),
     ];
 
     let mut app = App::new("pump")
@@ -58,8 +66,9 @@ fn main() -> io::Result<()> {
                 .about("List available ports")
                 .arg(
                     Arg::with_name("PHY")
-                        .help("Print ports physical type")
-                        .long("phy"),
+                        .help("Prints detailed ports information")
+                        .long("info")
+                        .short("i"),
                 ),
         )
         .subcommand(
@@ -71,7 +80,8 @@ fn main() -> io::Result<()> {
                     Arg::with_name("INPUT")
                         .help("Sets the input file")
                         .value_name("INPUT")
-                        .long("input"),
+                        .long("input")
+                        .short("i"),
                 ),
         )
         .subcommand(
@@ -83,7 +93,8 @@ fn main() -> io::Result<()> {
                     Arg::with_name("OUTPUT")
                         .help("Sets the output file")
                         .value_name("OUTPUT")
-                        .long("output"),
+                        .long("output")
+                        .short("o"),
                 ),
         );
 
@@ -115,11 +126,11 @@ fn list_ports(print_phy: bool) -> io::Result<()> {
     for p in ports {
         if print_phy {
             let phy_info = match p.port_type {
-                SerialPortType::BluetoothPort => "- Port Type: Bluetooth".to_string(),
-                SerialPortType::PciPort => "- Port Type: PCI".to_string(),
-                SerialPortType::Unknown => "- Port Type: Unknown".to_string(),
+                SerialPortType::BluetoothPort => "  - Port Type: Bluetooth".to_string(),
+                SerialPortType::PciPort => "  - Port Type: PCI".to_string(),
+                SerialPortType::Unknown => "  - Port Type: Unknown".to_string(),
                 SerialPortType::UsbPort(usb) => format!(
-          "- Port Type: USB (vid: {} pid: {})\n- Manufacturer: {}\n- Product: {}\n- Serial: {}",
+          "  - Port Type: USB [VID: {}, PID: {}]\n  - Manufacturer: {}\n  - Product: {}\n  - Serial: {}",
           usb.vid,
           usb.pid,
           usb.manufacturer.unwrap_or_default(),
@@ -150,7 +161,7 @@ fn create_pump(args: &clap::ArgMatches) -> Result<Pump, String> {
     let flow_control = args
         .value_of("FLOW")
         .map(|f| match f {
-            "soft" => FlowControl::Software,
+            "soft" | "s" => FlowControl::Software,
             _ => FlowControl::None,
         })
         .unwrap();
