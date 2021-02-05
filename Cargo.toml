@@ -1,0 +1,15 @@
+[package]
+name = "pump"
+version = "0.0.0"
+description = "Serial port pump"
+authors = ["Vitaly Domnikov <oss@vitaly.codes>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/dotcypress/pump"
+edition = "2018"
+
+[dependencies]
+clap = "2.33.3"
+serialport = { version = "4.0.0", default-features = false }
+
+[features]
+libudev = ["serialport/libudev"]
