@@ -67,6 +67,7 @@ OPTIONS:
     -d, --data-bits <DATA_BITS>    Sets the data bits [default: 8]  [possible values: 5, 6, 7, 8]
     -f, --flow <FLOW>              Sets the flow control [env: PUMP_FLOW=]  [default: off]  [possible values: off, soft]
     -i, --input <INPUT>            Sets the input file
+    -l, --limit <LIMIT>            Sets the data limit in bytes
     -p, --parity <PARITY>          Sets the parity [default: none]  [possible values: none, odd, even]
     -s, --stop-bits <STOP_BITS>    Sets the stop bits [default: 1]  [possible values: 1, 2]
     -t, --timeout <TIMEOUT>        Sets the timeout in milliseconds [default: 0]
@@ -96,6 +97,7 @@ OPTIONS:
     -d, --data-bits <DATA_BITS>    Sets the data bits [default: 8]  [possible values: 5, 6, 7, 8]
     -f, --flow <FLOW>              Sets the flow control [env: PUMP_FLOW=]  [default: off]  [possible values: off, soft]
     -o, --output <OUTPUT>          Sets the output file
+    -l, --limit <LIMIT>            Sets the data limit in bytes
     -p, --parity <PARITY>          Sets the parity [default: none]  [possible values: none, odd, even]
     -s, --stop-bits <STOP_BITS>    Sets the stop bits [default: 1]  [possible values: 1, 2]
     -t, --timeout <TIMEOUT>        Sets the timeout in milliseconds [default: 0]
