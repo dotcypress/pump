@@ -1,6 +1,6 @@
 [package]
 name = "pump"
-version = "0.0.2"
+version = "0.0.3"
 description = "Serial port pump"
 authors = ["Vitaly Domnikov <oss@vitaly.codes>"]
 license = "MIT/Apache-2.0"
