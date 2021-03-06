@@ -54,6 +54,11 @@ fn main() -> io::Result<()> {
             .possible_values(&["1", "2"])
             .long("stop-bits")
             .short("s"),
+        Arg::with_name("LIMIT")
+            .help("Sets the data limit in bytes")
+            .value_name("LIMIT")
+            .long("limit")
+            .short("l"),
     ];
 
     let mut app = App::new("pump")
@@ -189,6 +194,17 @@ fn create_pump(args: &clap::ArgMatches) -> Result<Pump, String> {
             _ => StopBits::One,
         })
         .unwrap();
+
+    let limit = match args.value_of("LIMIT") {
+        None => None,
+        Some(lim) => {
+            let limit = lim
+                .parse::<u64>()
+                .map_err(|err| format!("Invalid limit: {}", err))?;
+            Some(limit as usize)
+        }
+    };
+
     serialport::new(port_name, baud_rate)
         .timeout(Duration::from_millis(timeout))
         .flow_control(flow_control)
@@ -196,6 +212,6 @@ fn create_pump(args: &clap::ArgMatches) -> Result<Pump, String> {
         .data_bits(data_bits)
         .stop_bits(stop_bits)
         .open()
-        .map(|link| Pump::new(link))
+        .map(|link| Pump::new(link, limit))
         .map_err(|err| format!("Failed to open serial port: {}", err))
 }
