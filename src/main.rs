@@ -1,6 +1,6 @@
 use clap::{App, Arg};
 use core::time::Duration;
-use serialport::{DataBits, FlowControl, Parity, SerialPortType, StopBits};
+use serialport::{available_ports, DataBits, FlowControl, Parity, SerialPortType, StopBits};
 use std::fs::File;
 use std::io::{self, Error, ErrorKind};
 
@@ -83,7 +83,7 @@ fn main() -> io::Result<()> {
                 .args(&serial_args)
                 .arg(
                     Arg::with_name("INPUT")
-                        .help("Sets the input file")
+                        .help("Sets the input file [default: stdin]")
                         .value_name("INPUT")
                         .long("input")
                         .short("i"),
@@ -96,7 +96,7 @@ fn main() -> io::Result<()> {
                 .args(&serial_args)
                 .arg(
                     Arg::with_name("OUTPUT")
-                        .help("Sets the output file")
+                        .help("Sets the output file [default: stdout]")
                         .value_name("OUTPUT")
                         .long("output")
                         .short("o"),
@@ -134,26 +134,25 @@ fn main() -> io::Result<()> {
 }
 
 fn list_ports(print_phy: bool) -> io::Result<()> {
-    let ports =
-        serialport::available_ports().map_err(|err| Error::new(ErrorKind::NotFound, err))?;
-    for p in ports {
+    let ports = available_ports().map_err(|err| Error::new(ErrorKind::NotFound, err))?;
+    for port in ports {
         if print_phy {
-            let phy_info = match p.port_type {
+            let phy_info = match port.port_type {
                 SerialPortType::BluetoothPort => "  - Port Type: Bluetooth".to_string(),
                 SerialPortType::PciPort => "  - Port Type: PCI".to_string(),
                 SerialPortType::Unknown => "  - Port Type: Unknown".to_string(),
                 SerialPortType::UsbPort(usb) => format!(
-          "  - Port Type: USB [VID: {}, PID: {}]\n  - Manufacturer: {}\n  - Product: {}\n  - Serial: {}",
-          usb.vid,
-          usb.pid,
-          usb.manufacturer.unwrap_or_default(),
-          usb.product.unwrap_or_default(),
-          usb.serial_number.unwrap_or_default(),
-        ),
+                    "  - Port Type: USB [VID: {}, PID: {}]\n  - Manufacturer: {}\n  - Product: {}\n  - Serial: {}",
+                    usb.vid,
+                    usb.pid,
+                    usb.manufacturer.unwrap_or_default(),
+                    usb.product.unwrap_or_default(),
+                    usb.serial_number.unwrap_or_default(),
+                ),
             };
-            println!("{}\n{}\n", p.port_name, phy_info);
+            println!("{}\n{}\n", port.port_name, phy_info);
         } else {
-            println!("{}", p.port_name);
+            println!("{}", port.port_name);
         };
     }
     Ok(())
@@ -202,7 +201,6 @@ fn create_pump(args: &clap::ArgMatches) -> Result<Pump, String> {
             _ => StopBits::One,
         })
         .unwrap();
-
     let limit = match args.value_of("LIMIT") {
         None => None,
         Some(lim) => {

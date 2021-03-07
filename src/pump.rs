@@ -32,8 +32,8 @@ impl Pump {
                         Some(limit) => usize::min(n, limit - byte_counter),
                         _ => n,
                     };
-                    writer.write_all(&buf[..chunk])?;
                     byte_counter += chunk;
+                    writer.write_all(&buf[..chunk])?;
                     writer.flush()?
                 }
                 Err(err) => return Err(err),
@@ -63,8 +63,8 @@ impl Pump {
                         Some(limit) => usize::min(n, limit - byte_counter),
                         _ => n,
                     };
-                    self.link.write_all(&buf[..chunk])?;
                     byte_counter += chunk;
+                    self.link.write_all(&buf[..chunk])?;
                     self.link.flush()?
                 }
                 Err(err) => return Err(err),
