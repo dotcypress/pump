@@ -77,6 +77,12 @@ fn main() -> io::Result<()> {
                 ),
         )
         .subcommand(
+            App::new("transfer")
+                .visible_alias("tx")
+                .about("Transfer data from stdin to stdout throw the serial port")
+                .args(&serial_args),
+        )
+        .subcommand(
             App::new("upload")
                 .visible_alias("up")
                 .about("Upload to serial port")
@@ -103,33 +109,38 @@ fn main() -> io::Result<()> {
                 ),
         );
 
-    let res = match app.clone().get_matches().subcommand() {
+    match app.clone().get_matches().subcommand() {
         ("list", Some(args)) => list_ports(args.is_present("PHY")),
-        ("upload", Some(args)) => match create_pump(args) {
-            Ok(mut pump) => match args.value_of("INPUT") {
-                Some(path) => pump.upload(&mut File::open(path)?),
-                None => pump.upload(&mut io::stdin()),
-            },
+        (cmd, Some(args)) => match create_pump(args) {
             Err(err) => Err(Error::new(ErrorKind::NotFound, err)),
-        },
-        ("download", Some(args)) => match create_pump(args) {
-            Ok(mut pump) => match args.value_of("OUTPUT") {
-                Some(path) => pump.download(&mut File::create(path)?),
-                None => pump.download(&mut io::stdout()),
-            },
-            Err(err) => Err(Error::new(ErrorKind::NotFound, err)),
+            Ok(mut pump) => {
+                let res = match cmd {
+                    "transfer" => pump.transfer(),
+                    "upload" => match args.value_of("INPUT") {
+                        Some(path) => pump.upload(&mut File::open(path)?),
+                        None => pump.upload(&mut io::stdin()),
+                    },
+                    "download" => match args.value_of("OUTPUT") {
+                        Some(path) => pump.download(&mut File::create(path)?),
+                        None => pump.download(&mut io::stdout()),
+                    },
+                    _ => app
+                        .print_long_help()
+                        .map_err(|err| Error::new(ErrorKind::Other, err)),
+                };
+
+                match res {
+                    Ok(_) => Ok(()),
+                    Err(err) => match err.kind() {
+                        ErrorKind::BrokenPipe | ErrorKind::TimedOut => Ok(()),
+                        _ => Err(err),
+                    },
+                }
+            }
         },
         _ => app
             .print_long_help()
             .map_err(|err| Error::new(ErrorKind::Other, err)),
-    };
-
-    match res {
-        Ok(_) => Ok(()),
-        Err(err) => match err.kind() {
-            ErrorKind::BrokenPipe => Ok(()),
-            _ => Err(err),
-        },
     }
 }
 

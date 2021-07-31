@@ -1,4 +1,4 @@
-use serialport::SerialPort;
+use serialport::*;
 use std::io::{self, Read, Write};
 use std::thread::sleep;
 use std::time::Duration;
@@ -7,7 +7,7 @@ const FIFO_SIZE: usize = 256;
 const SLEEP_TIME: Duration = Duration::from_micros(100);
 
 pub struct Pump {
-    link: Box<dyn SerialPort>,
+    pub link: Box<dyn SerialPort>,
     limit: Option<usize>,
 }
 
@@ -16,12 +16,22 @@ impl Pump {
         Pump { link, limit }
     }
 
+    pub fn transfer(&mut self) -> io::Result<()> {
+        let wait_ms = 1_000 / (self.link.baud_rate()? as u64 / 4_096);
+
+        std::io::copy(&mut io::stdin(), &mut self.link)?;
+        sleep(Duration::from_millis(wait_ms));
+        std::io::copy(&mut self.link, &mut io::stdout())?;
+
+        Ok(())
+    }
+
     pub fn download<W: Write>(&mut self, writer: &mut W) -> io::Result<()> {
         let mut buf = [0; FIFO_SIZE / 4];
         let mut byte_counter = 0;
         loop {
             let rx_fifo = self.link.bytes_to_read()?;
-            if rx_fifo == 0 {
+            if self.link.timeout().as_millis() == 0 && rx_fifo == 0 {
                 sleep(SLEEP_TIME);
                 continue;
             }
@@ -52,7 +62,7 @@ impl Pump {
         let mut byte_counter = 0;
         loop {
             let tx_fifo = self.link.bytes_to_write()?;
-            if tx_fifo > FIFO_SIZE as u32 / 2 {
+            if self.link.timeout().as_millis() == 0 && tx_fifo > FIFO_SIZE as u32 / 2 {
                 sleep(SLEEP_TIME);
                 continue;
             }
