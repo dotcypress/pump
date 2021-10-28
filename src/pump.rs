@@ -17,7 +17,7 @@ impl Pump {
     }
 
     pub fn transfer(&mut self) -> io::Result<()> {
-        let wait_ms = 1_000 / (self.link.baud_rate()? as u64 / 4_096);
+        let wait_ms = 1_024 / (self.link.baud_rate()? as u64 / 4_096);
 
         std::io::copy(&mut io::stdin(), &mut self.link)?;
         sleep(Duration::from_millis(wait_ms));
