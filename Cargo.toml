@@ -9,7 +9,7 @@ edition = "2018"
 
 [dependencies]
 clap = "2.33.3"
-serialport = { version = "4.0.0", default-features = false }
+serialport = { version = "4.0.2", default-features = false }
 
 [features]
 libudev = ["serialport/libudev"]
